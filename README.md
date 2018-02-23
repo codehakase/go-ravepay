@@ -1,5 +1,5 @@
-# Go-Raveay
-GO client for Flutterwave Ravepay REST API
+# Go-RavePay
+GO client for Flutterwave RavePay REST API
 
 ## Ravepay Services exposed by the library
 * Account Charge
