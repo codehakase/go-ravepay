@@ -1,5 +1,5 @@
 package ravepay
 
 type CardService struct {
-	Client Client
+	Client *Client
 }

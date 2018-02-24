@@ -1,0 +1,47 @@
+
+{
+  "v1":{
+    "staging":{
+      "tokenize":"http://staging1flutterwave.co:8080/pwc/rest/card/mvva/tokenize/",
+      "charge":"http://staging1flutterwave.co:8080/pwc/rest/card/mvva/pay/",
+      "validate":"http://staging1flutterwave.co:8080/pwc/rest/card/mvva/pay/validate/",
+      "preauth":"http://staging1flutterwave.co:8080/pwc/rest/card/mvva/preauthorize/",
+      "capture":"http://staging1flutterwave.co:8080/pwc/rest/card/mvva/capture/",
+      "refund":"http://staging1flutterwave.co:8080/pwc/rest/card/mvva/refund/",
+      "avs":"http://staging1flutterwave.co:8080/pwc/rest/card/mvva/avs/pay",
+      "status":"http://staging1flutterwave.co:8080/pwc/rest/card/mvva/status"
+    },
+    "production":{
+      "tokenize":"https://prod1flutterwave.co:8181/pwc/rest/card/mvva/tokenize/",
+      "charge":"https://prod1flutterwave.co:8181/pwc/rest/card/mvva/pay/",
+      "validate":"https://prod1flutterwave.co:8181/pwc/rest/card/mvva/pay/validate/",
+      "preauth":"https://prod1flutterwave.co:8181/pwc/rest/card/mvva/preauthorize/",
+      "capture":"https://prod1flutterwave.co:8181/pwc/rest/card/mvva/capture/",
+      "refund":"https://prod1flutterwave.co:8181/pwc/rest/card/mvva/refund/",
+      "avs":"https://prod1flutterwave.co:8181/pwc/rest/card/mvva/avs/pay",
+      "status":"https://prod1flutterwave.co:8181/pwc/rest/card/mvva/status"
+    }
+  },
+  "v2":{
+    "staging":{
+      "tokenize":"https://flutterwavestagingv2.com/pwc/rest/card/mvva/tokenize/",
+      "charge":"https://flutterwavestagingv2.com/pwc/rest/card/mvva/pay/",
+      "validate":"https://flutterwavestagingv2.com/pwc/rest/card/mvva/pay/validate/",
+      "preauth":"https://flutterwavestagingv2.com/pwc/rest/card/mvva/preauthorize/",
+      "capture":"https://flutterwavestagingv2.com/pwc/rest/card/mvva/capture/",
+      "refund":"https://flutterwavestagingv2.com/pwc/rest/card/mvva/refund/",
+      "avs":"https://flutterwavestagingv2.com/pwc/rest/card/mvva/avs/pay",
+      "status":"https://flutterwavestagingv2.com/pwc/rest/card/mvva/status"
+    },
+    "production":{
+      "tokenize":"https://flutterwaveprodv2.com/pwc/rest/card/mvva/tokenize/",
+      "charge":"https://flutterwaveprodv2.com/pwc/rest/card/mvva/pay/",
+      "validate":"https://flutterwaveprodv2.com/pwc/rest/card/mvva/pay/validate/",
+      "preauth":"https://flutterwaveprodv2.com/pwc/rest/card/mvva/preauthorize/",
+      "capture":"https://flutterwaveprodv2.com/pwc/rest/card/mvva/capture/",
+      "refund":"https://flutterwaveprodv2.com/pwc/rest/card/mvva/refund/",
+      "avs":"https://flutterwaveprodv2.com/pwc/rest/card/mvva/avs/pay",
+      "status":"https://flutterwaveprodv2.com/pwc/rest/card/mvva/status"
+    }
+  }
+}
