@@ -4,8 +4,12 @@ import (
 	"bytes"
 	"crypto/cipher"
 	"crypto/des"
+	"crypto/md5"
+	"encoding/base64"
 	"encoding/hex"
 	"errors"
+	"log"
+	"strings"
 )
 
 type CryptoService struct {
@@ -14,14 +18,18 @@ type CryptoService struct {
 
 // TripleDesEncrypt uses the Tripple Digital Encryption Standard to encrypt the transaction data
 // len(key) % 8 = 0
-func (c *CryptoService) TripleDesEncrypt(origData, key string) (string, error) {
+func (c *CryptoService) TripleDesEncrypt(origData string) (string, error) {
+	k := c.GetSecretKey()
+	key := c.getKey(k)
 	// call main Encryption method
 	return tripleDesEncrypt(origData, []byte(key), PKCS5Padding)
 }
 
-// TripleDesEncrypt uses the Tripple Digital Encryption Standard to decrypt encrypted transaction data
+// TripleDesDecrypt uses the Tripple Digital Encryption Standard to decrypt encrypted transaction data
 // len(key) % 8 = 0
-func (c *CryptoService) TripleDesDecrypt(encrypted, key string) (string, error) {
+func (c *CryptoService) TripleDesDecrypt(encrypted string) (string, error) {
+	k := c.GetSecretKey()
+	key := c.getKey(k)
 	// call main Encryption method
 	return tripleDesDecrypt(encrypted, []byte(key), PKCS5UnPadding)
 }
@@ -36,11 +44,11 @@ func tripleDesEncrypt(origData string, key []byte, paddingFunc func([]byte, int)
 	blockMode := cipher.NewCBCEncrypter(block, iv)
 	crypted := make([]byte, len(orig))
 	blockMode.CryptBlocks(crypted, orig)
-	return hex.EncodeToString(crypted), nil
+	return base64.StdEncoding.EncodeToString(crypted), nil
 }
 
 func tripleDesDecrypt(encrypted string, key []byte, unPaddingFunc func([]byte) []byte) (string, error) {
-	e, err := hex.DecodeString(encrypted)
+	e, err := base64.StdEncoding.DecodeString(encrypted)
 	if err != nil {
 		return "", err
 	}
@@ -94,4 +102,35 @@ func PKCS7Padding(ciphertext []byte, blockSize int) []byte {
 
 func PKCS7UnPadding(origData []byte) []byte {
 	return PKCS5UnPadding(origData)
+}
+
+// GetPublicKey returns the API public key
+func (c *CryptoService) GetPublicKey() string {
+	if c.Client.PublicKey != "" {
+		return c.Client.PublicKey
+	}
+	log.Fatal("A public key wasn't set at initialzation")
+	return
+}
+
+// GetSecretKey returns the secret key attached to rave merchant account
+func (c *CryptoService) GetSecretKey() string {
+	// secret key is loaded from an environment variable
+	// which is initialized when a new client is created
+	// for flexibilty, the client (caller) states where to store
+	// their secret key, preferably in an environment variable
+	if c.Client.SecretKey != "" {
+		return c.Client.SecretKey
+	}
+	log.Fatal("A secret key wasn't set at initialzation")
+	return
+}
+
+func (c *CryptoService) getKey(key string) string {
+	hash := md5.Sum([]byte(key))
+	hashedSubstr := hash[len(hash)-6:]
+	replacePrefix := strings.Replace(key, "FLWSECK-", "", 1)
+	// adjust and return first 12 substring
+	adjustedSubStr := replacePrefix[:12]
+	return adjustedSubStr + hex.EncodeToString(hashedSubstr[:])
 }

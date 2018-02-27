@@ -5,19 +5,18 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"github.com/codehakase/go-ravepay/types"
 )
 
-// resources specific to client
-var resources types.VersionEnv
-
 // DefaultVersion is the fallback for the sdk
-var DefaultVersion string = "v1"
+const (
+	DefaultVersion = "v1"
+	ProductionURL  = "https://api.ravepay.co"
+	StagingURL     = "http://flw-pms-dev.eu-west-1.elasticbeanstalk.com"
+)
 
 // Err is the error returned by default on handlers
 var Err = errors.New("unexpected error occured while processing the request")
@@ -29,17 +28,18 @@ type Client struct {
 	BaseURL *url.URL
 	// client user agent
 	UserAgent string
-	// RavePay merchant key - Get this from your account
-	MerchantKey string
-	// RavePay API key - Get this from your account
-	APIKey string
-	// Runtime environment (staging, dev, production)
+	// RavePay API Public key - Get this from your account
+	PublicKey string
+	// RavePay secret key - this is initialized and is recommended to be stored in an environment variable
+	SecretKey string
+	// Runtime environment (staging, or production)
 	Environment string
 	// client used to send and receive http requests.
 	httpClient *http.Client
 	// api version to use througout an instance
 	Version string
-
+	// Resources used by all service objects
+	Resources *types.Resources
 	// The follow are service objects which are initialzed when NewClient(...) is called
 	// They are pointers to structs that have methods, and share the same context with the
 	// instantiated client
@@ -81,37 +81,25 @@ func NewClient(httpClient *http.Client, merchantKey, apiKey, env, version string
 	if httpClient == nil {
 		httpClient = http.DefaultClient
 	}
-	if version != "" {
+	if version == "" {
 		version = DefaultVersion
 	}
-	// load extra data
-	cfg := types.LoadConfigs()
-	// decide which base paths to use
-	switch version {
-	case "v1":
-		if strings.ToLower(env) == "staging" || strings.ToLower(env) == "test" {
-			resources = cfg.V1.Staging
-		}
-		if strings.ToLower(env) == "production" {
-			resources = cfg.V1.Production
-		}
-	case "v2":
-		if strings.ToLower(env) == "staging" || strings.ToLower(env) == "test" {
-			resources = cfg.V1.Staging
-		}
-		if strings.ToLower(env) == "production" {
-			resources = cfg.V1.Production
-		}
-	}
 
-	log.Printf("%v", resources)
-
-	c := &Client{
+	c := Client{
 		MerchantKey: merchantKey,
 		APIKey:      apiKey,
 		Environment: env,
-
-		httpClient: httpClient,
+		Resources:   types.LoadConfigs(),
+		httpClient:  httpClient,
+	}
+	// set mode
+	switch env {
+	case "staging":
+		c.BaseURL = url.Parse(StagingURL)
+	case "production":
+		c.BaseURL = url.Parse(ProductionURL)
+	default:
+		c.BaseURL = url.Parse(StagingURL)
 	}
 
 	// initialize service objects
@@ -129,7 +117,7 @@ func NewClient(httpClient *http.Client, merchantKey, apiKey, env, version string
 	c.Check = &APICheckService{Client: c}
 	c.Ach = &AchService{Client: c}
 
-	return c, nil
+	return &c, nil
 }
 
 // SetBaseURL updates the client struct with a new url to send request to/from
@@ -139,22 +127,12 @@ func (c *Client) SetBaseURL(u string) *Client {
 	return c
 }
 
-// GetMerchantKey retrives the merchant's key
-func (c *Client) GetMerchantKey() string {
-	return c.MerchantKey
-}
-
-// GetAPIKey retrives the merchant's api key
-func (c *Client) GetAPIKey() string {
-	return c.APIKey
-}
-
 // GetEnv retrives the current set environment
 func (c *Client) GetEnv() string {
 	return c.Environment
 }
 
-func (c *Client) newRequest(method, path string, body interface{}) (*http.Request, error) {
+func (c *Client) newRequest(method, path string, body interface{}, headers map[string]string) (*http.Request, error) {
 	r := &url.URL{Path: path}
 	u := c.BaseURL.ResolveReference(r)
 
@@ -174,6 +152,11 @@ func (c *Client) newRequest(method, path string, body interface{}) (*http.Reques
 
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json;charset=UTF-8")
+		if headers != nil {
+			for k, v := range headers {
+				req.Header.Set(headers[k], headers[v])
+			}
+		}
 	}
 	return req, nil
 }

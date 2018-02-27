@@ -9,8 +9,9 @@ import (
 
 type RequestService struct {
 	Client  *Client
-	BaseURL string
+	URL     string
 	Data    map[string]string
+	Headers map[string]interface{}
 }
 
 // Response is populated and sent on each request
@@ -58,14 +59,21 @@ func (res *Response) getResponseData() map[string]interface{} {
 }
 
 // NewRequest acts as the constructor to make subsequent requests from the sdk
-func (r *RequestService) NewRequest(url string) *RequestService {
-	r.BaseURL = url
-	r.Data = make(map[string]string)
+func (r *RequestService) NewRequest(url string, body interface{}) *RequestService {
+	r.URL = url
+	if body == nil {
+		r.Data = make(map[string]string)
+	} else {
+		r.Data = body
+	}
 	return r
 }
 
 func (r *RequestService) AddBody(key, value string) {
 	r.Data[key] = value
+}
+func (r *RequestService) AddHeader(key, value string) {
+	r.Headers[key] = value
 }
 
 func (r *RequestService) GetBody() map[string]string {
@@ -75,7 +83,7 @@ func (r *RequestService) GetBody() map[string]string {
 func (r *RequestService) DoRequest() (*Response, error) {
 	rs := Response{}
 	r.Client.httpClient = &http.Client{Timeout: 60}
-	req, err := r.Client.newRequest("POST", r.BaseURL, r.Data, nil)
+	req, err := r.Client.newRequest("POST", r.URL, r.Data, r.Headers)
 	if err != nil {
 		return &rs, err
 	}
@@ -91,6 +99,7 @@ func (r *RequestService) parseResponse(response *http.Response) *Response {
 	resp := Response{}
 	data := make(map[string]interface{})
 	resp.StatusCode = response.StatusCode
+	defer response.Body.Close()
 	if response.StatusCode < 500 {
 		resBytes, err := ioutil.ReadAll(response.Body)
 		if err != nil {

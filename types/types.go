@@ -1,9 +1,12 @@
+// Package types defines structs and constants used by the sdk
 package types
 
 import (
 	"encoding/json"
 	"log"
 	"os"
+	"path"
+	"runtime"
 )
 
 var (
@@ -30,6 +33,11 @@ type ValidationErr *RaveErr
 
 // Resources desbribes endpoints which is used in the sdk
 type Resources struct {
+	CardResources *CardResources
+}
+
+// CardResources is a struct holding the endpoints used by the CardService object
+type CardResources struct {
 	V1 struct {
 		Staging    VersionEnv `json:"staging"`
 		Production VersionEnv `json:"production"`
@@ -50,17 +58,28 @@ type VersionEnv struct {
 	Status   string `json:"status"`
 }
 
-func LoadConfigs() Resources {
-	resourcesFile, err := os.Open("/home/codehakase/gocode/src/github.com/codehakase/go-ravepay/types/resources.json")
+func LoadConfigs() *Resources {
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		panic("No caller information")
+	}
+	dir := path.Dir(filename)
+
+	// load resource configs for service objects
+	resourcesFile, err := os.Open(dir + "/resources.json")
 	defer resourcesFile.Close()
 	if err != nil {
 		log.Fatalln(err)
 	}
 
 	parser := json.NewDecoder(resourcesFile)
-	var d Resources
-	if err = parser.Decode(&d); err != nil {
+	var cr CardResources
+	if err = parser.Decode(&cr); err != nil {
 		log.Fatalln(err)
+	}
+
+	d := &Resources{
+		CardResources: &cr,
 	}
 	return d
 }
